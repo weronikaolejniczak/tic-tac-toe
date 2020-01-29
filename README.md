@@ -1,14 +1,10 @@
 # Tic-tac-toe
 
-Description
+A tic-tac-toe program using the decision tree evaluation method (min-max algorithm).
 
 ## Installation
 
 Fork and download the repository.
-
-## Usage
-
-(...)
 
 ## Contributors
 

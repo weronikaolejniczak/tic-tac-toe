@@ -1,0 +1,24 @@
+Optimization and evolutionary algorithms 2019
+
+Decision tree
+
+Write a tic-tac-toe program using the decision tree evaluation method (min-max algorithm)
+
+Implementation notes (which may or may not be used in your program):
+(a) To improve efficiency, first and second move should be determined
+only once by pre-computation. It turns out that the first move can be
+arbitrary, and the second is a reaction only to three positions (the
+first move in the corner, in the middle of the side or the center of
+the board). For the third move, the full decision tree has 7! = 5040
+leaves (even less with cutting) so it can be analyzed without noticeable
+delay. // Caution! We count all the moves together, whether it's ours
+or the opponent's.
+(b) From all possible moves with the same value of the objective function
+we choose one randomly (on the fly, not remembering them).
+(c) Positions should be saved binary. Then all possible (i.e 8) lines
+can be saved as masks and checked using single logical operation.
+(d) During the game the number of possible lines can be reduced.
+(e) You can use the time when your opponent thinks for performing some
+pre-calculations (e.g. reduction of number of possible lines).
+
+Important! Do not store the decision tree!

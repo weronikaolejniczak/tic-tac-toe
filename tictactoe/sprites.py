@@ -1,28 +1,110 @@
 import pygame as pg
-from tictactoe import settings
+import minimax
+
+import random
 
 
 class Player(pg.sprite.Sprite):
-    def __init__(self, pos_x, pos_y, XorO):
-        # call the parent class (Sprite) constructor
-        super().__init__()
-        self.WIDTH = settings.P_WIDTH
-        self.HEIGHT = settings.P_HEIGHT
-        self.pos_x = pos_x
-        self.pos_y = pos_y
-        self.XorO = XorO
-        self.image = pg.Surface([settings.WIDTH, settings.HEIGHT])
-        self.image.fill(settings.WHITE)
-        self.image.set_colorkey(settings.WHITE)
+    def __init__(self, game, ID):
+        self.groups = game.all_sprites
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        self.TILESIZE = (game.WIDTH/3, game.HEIGHT/3)
+        self.TILEMAP = game.TILEMAP
+        self.image = pg.Surface(self.TILESIZE)
+        self.rect = (-200, -200)
+        self.id = ID
+        self.turns = 0
+        self.x, self.y = (0, 0)
 
-        # draw a red square
-        # pg.draw.rect(self.image, settings.RED, [self.pos_x, self.pos_y, self.WIDTH, self.HEIGHT])
+    def AI_turn(self):
+        # TODO implement mini-max algorithm
+        # X (2) -> AI
+        x = random.randint(0, 2)
+        y = random.randint(0, 2)
 
-        # draw an X or O
-        if XorO == "X" or XorO == "x":
-            self.image = pg.image.load("resources/x.png").convert_alpha()
-        elif XorO == "O" or XorO == "o":
-            self.image = pg.image.load("resources/o.png").convert_alpha()
+        if self.TILEMAP[x][y] == 0:
+            self.TILEMAP[x][y] = 2
+            self.turns += 1
+            self.game.turn = "human"  # change the turn
+            self.game.is_human_turn = True
+        else:
+            if not self.game.is_filled():
+                self.AI_turn()
+            else:
+                self.game.draw()
 
-        # fetch the rectangle object that has the dimensions of the image
-        self.rect = self.image.get_rect()
+                print("Board filled!")
+                self.game.check_for_win(self.id, 2)
+
+                pg.time.wait(2000)
+
+                self.game.playing = False
+
+    def determine_tile(self):
+        x = self.x
+        y = self.y
+        index_x = 0
+        index_y = 0
+
+        # first row
+        # TILEMAP[0][0] (x: 0-200 & y: 0-200) first column
+        if (x in range(200)) and (y in range(200)):
+            index_x, index_y = (0, 0)
+        # TILEMAP[0][1] (x: 200-400 & y: 0-200) second column
+        elif (x in range(200, 400)) and (y in range(200)):
+            index_x, index_y = (0, 1)
+        # TILEMAP[0][2] (x: 400-600 & y: 0-200) third column
+        elif (x in range(400, 600)) and (y in range(200)):
+            index_x, index_y = (0, 2)
+        ###
+        # second row
+        # TILEMAP[1][0] (x: 0-200 & y: 200-400) first column
+        elif (x in range(200)) and (y in range(200, 400)):
+            index_x, index_y = (1, 0)
+        # TILEMAP[1][1] (x: 200-400 & y: 200-400) second column
+        elif (x in range(200, 400)) and (y in range(200, 400)):
+            index_x, index_y = (1, 1)
+        # TILEMAP[1][2] (x: 400-600 & y: 200-400) third column
+        elif (x in range(400, 600)) and (y in range(200, 400)):
+            index_x, index_y = (1, 2)
+        ###
+        # third row
+        # TILEMAP[2][0] (x: 0-200 & y: 400-600) first column
+        elif (x in range(200)) and (y in range(400, 600)):
+            index_x, index_y = (2, 0)
+        # TILEMAP[2][1] (x: 200-400 & y: 400-600) second column
+        elif (x in range(200, 400)) and (y in range(400, 600)):
+            index_x, index_y = (2, 1)
+        # TILEMAP[2][2] (x: 400-600 & y: 400-600) third column
+        elif (x in range(400, 600)) and (y in range(400, 600)):
+            index_x, index_y = (2, 2)
+
+        return index_x, index_y
+
+    def human_turn(self):
+        # O (1) -> human
+        if pg.mouse.get_pressed()[0] == 1:
+            self.x, self.y = pg.mouse.get_pos()
+            index = self.determine_tile()
+
+            if self.TILEMAP[index[0]][index[1]] == 0:
+                self.TILEMAP[index[0]][index[1]] = 1
+                self.turns += 1
+                self.game.turn = "AI"  # change the turn
+                self.game.is_human_turn = False
+
+                if self.game.is_filled():
+                    self.game.draw()
+
+                    print("Board filled!")
+                    self.game.check_for_win(self.id, 1)
+
+                    pg.time.wait(2000)
+                    self.game.playing = False
+
+    def update(self):
+        if self.game.is_human_turn:
+            self.human_turn()
+        else:
+            self.AI_turn()

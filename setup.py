@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name='tictactoe',
     version='0.1',
-    packages=['pygame'],
+    packages=['numpy', 'pygame'],
     package_dir={'': 'tictactoe'},
     url='https://github.com/weronikaolejniczak/tictactoe',
     license='MIT',
