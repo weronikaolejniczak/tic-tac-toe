@@ -1,5 +1,8 @@
 import sys
+
 import pygame as pg
+
+import minimax as mm
 import settings
 from sprites import Player
 
@@ -10,12 +13,15 @@ START = pg.image.load(settings.START)
 BUTTON = pg.image.load(settings.BUTTON)
 favicon = pg.image.load(settings.FAV)
 
+ENTER = 13  # ENTER key code
+ESCAPE = 27  # ESCAPE key code
+
 
 class Game:
     def __init__(self):
         pg.init()  # initialize pygame module
         pg.font.init()
-        print("Tic-tac-toe Mini-max algorithm project @ werolejniczak.github.com")
+        print("Tic-tac-toe Mini-max algorithm project @ weronikaolejniczak.github.com \n")
         self.font = pg.font.Font("resources/fonts/{}".format(settings.FONT), 50)
         self.WIDTH = settings.WIDTH
         self.HEIGHT = settings.HEIGHT
@@ -31,10 +37,10 @@ class Game:
         self.all_sprites = pg.sprite.Group()
         self.playing = True
         self.dt = 0
-        self.turn = "human"
+        self.turn = "AI"
         self.human = Player(self, "human")
         self.AI = Player(self, "AI")
-        self.is_human_turn = True
+        self.is_human_turn = False
         self.winner = ""
         self.start = None
         self.end = None
@@ -103,27 +109,25 @@ class Game:
             self.winner = "draw"
 
     def is_filled(self):
-        boolean = True
-
         for i in range(3):
             for j in range(3):
                 if self.TILEMAP[i][j] == 0:
-                    boolean = False
+                    return False
 
-        return boolean
+        return True
 
     def update(self, current_turn):
         # update portion of the game loop
         if current_turn == "human":
             self.human.update()
-            self.check_for_win(self.human.id, 1)
+            self.check_for_win(self.human.id, -1)
 
             if self.winner == "human":
                 self.playing = False
 
         elif current_turn == "AI":
             self.AI.update()
-            self.check_for_win(self.AI.id, 2)
+            self.check_for_win(self.AI.id, 1)
 
             if self.winner == "AI":
                 self.playing = False
@@ -202,10 +206,10 @@ class Game:
     def draw_tilemap(self):
         for i in range(3):
             for j in range(3):
-                if self.TILEMAP[i][j] == 1:
+                if self.TILEMAP[i][j] == -1:
                     # draw O (human) in correct position
                     self.screen.blit(O, self.get_pos_from_index(i, j))
-                elif self.TILEMAP[i][j] == 2:
+                elif self.TILEMAP[i][j] == 1:
                     # draw X (AI) in correct position
                     self.screen.blit(X, self.get_pos_from_index(i, j))
 
@@ -258,7 +262,7 @@ class Game:
                 self.playing = False
                 self.quit()
             elif event.type == pg.KEYDOWN:
-                if event.key == 27: # press ESCAPE to quit
+                if event.key == ESCAPE:  # press ESCAPE to quit
                     self.playing = False
                     self.quit()
 
@@ -276,17 +280,21 @@ class Game:
 
             for event in pg.event.get():
                 if event.type == pg.KEYDOWN:
-                    if event.key == 13:  # press ENTER to start the game
+                    if event.key == ENTER:  # press ENTER to start the game
                         self.start_time = pg.time.get_ticks() / 1000
                         boolean = False
-                    elif event.key == 27:  # press ESCAPE to quit
+                    elif event.key == ESCAPE:  # press ESCAPE to quit
                         self.playing = False
                         self.quit()
 
     def show_summary(self):
-        # TODO show summary
-        # console summary
-        print("\n ### SUMMARY ###")
+        # print final move board
+        print("### FINAL BOARD ###")
+        print(mm.print_board(self.TILEMAP))
+        print("\n\n")
+
+        # show console summary
+        print("### SUMMARY ###")
         game_time = "Game lasted: " + str(self.end_time)
         print(game_time)
         AI_moves = "AI moves: " + str(self.AI.turns)
@@ -298,11 +306,20 @@ class Game:
 
         info = [game_time, AI_moves, human_moves, winner]
 
+        # show graphical summary
         i = 0
         for piece in info:
-            summary = self.font.render(piece, False, settings.FONT_COLOR)
-            self.screen.blit(summary, (self.WIDTH / 5, self.HEIGHT / 2.3 + i))
-            i += 60
+            if piece != winner:
+                summary = self.font.render(piece, False, settings.FONT_COLOR)
+                self.screen.blit(summary, (self.WIDTH / 5, self.HEIGHT / 2.3 + i))
+                i += 60
+            else:
+                if self.winner != "draw":
+                    summary = self.font.render(piece, False, settings.FONT_COLOR)
+                    self.screen.blit(summary, (self.WIDTH / 5, self.HEIGHT / 2.3 + i))
+                else:
+                    summary = self.font.render("It's a draw!", False, settings.FONT_COLOR)
+                    self.screen.blit(summary, (self.WIDTH / 5, self.HEIGHT / 2.3 + i))
 
     @staticmethod
     def convert(fl):

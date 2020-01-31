@@ -1,7 +1,7 @@
-import pygame as pg
-import minimax
-
 import random
+import pygame as pg
+
+import minimax as mm
 
 
 class Player(pg.sprite.Sprite):
@@ -18,25 +18,46 @@ class Player(pg.sprite.Sprite):
         self.x, self.y = (0, 0)
 
     def AI_turn(self):
-        # TODO implement mini-max algorithm
-        # X (2) -> AI
-        x = random.randint(0, 2)
-        y = random.randint(0, 2)
+        # X (1) -> AI
+        # Random choice of first AI move, second in general (for computation reasons):
+        if self.turns == 0:
+            x = random.randint(0, 2)
+            y = random.randint(0, 2)
 
-        if self.TILEMAP[x][y] == 0:
-            self.TILEMAP[x][y] = 2
-            self.turns += 1
-            self.game.turn = "human"  # change the turn
-            self.game.is_human_turn = True
-        else:
+            if self.TILEMAP[x][y] == 0:
+                self.TILEMAP[x][y] = 1  # make a move
+
+                self.turns += 1
+                print("### TURN: {} ###".format(self.turns))
+                print(mm.print_board(self.TILEMAP))
+                print("\n")
+
+                self.game.turn = "human"  # change the turn
+                self.game.is_human_turn = True
+        # Use of mini-max algorithm for the choice of move
+        elif self.turns > 0:
             if not self.game.is_filled():
-                self.AI_turn()
+                current_board = self.TILEMAP
+
+                best_move = mm.find_best_move(current_board)
+                x, y = best_move[0], best_move[1]
+                self.TILEMAP[x][y] = 1  # make a move
+
+                self.turns += 1
+                print("### TURN: {} ###".format(self.turns))
+                print(mm.print_board(self.TILEMAP))
+                print("\n")
+                print("BEST MOVE: {}".format(best_move))
+                print("\n")
+
+                self.game.turn = "human"  # change the turn
+                self.game.is_human_turn = True
             else:
                 self.game.draw()
 
                 print("Board filled!")
-                self.game.check_for_win(self.id, 2)
-
+                
+                self.game.check_for_win(self.id, 1)
                 pg.time.wait(2000)
 
                 self.game.playing = False
@@ -83,13 +104,14 @@ class Player(pg.sprite.Sprite):
         return index_x, index_y
 
     def human_turn(self):
-        # O (1) -> human
+        # O (-1) -> human
         if pg.mouse.get_pressed()[0] == 1:
             self.x, self.y = pg.mouse.get_pos()
             index = self.determine_tile()
 
             if self.TILEMAP[index[0]][index[1]] == 0:
-                self.TILEMAP[index[0]][index[1]] = 1
+                self.TILEMAP[index[0]][index[1]] = -1
+
                 self.turns += 1
                 self.game.turn = "AI"  # change the turn
                 self.game.is_human_turn = False
@@ -98,7 +120,7 @@ class Player(pg.sprite.Sprite):
                     self.game.draw()
 
                     print("Board filled!")
-                    self.game.check_for_win(self.id, 1)
+                    self.game.check_for_win(self.id, -1)
 
                     pg.time.wait(2000)
                     self.game.playing = False
